@@ -1,5 +1,8 @@
-/* ============ Темы ============ */
+/* ============================================================
+   ТЕМЫ
+   ============================================================ */
 
+/* Светлая (по умолчанию) */
 :root,
 :root[data-theme="light"] {
   --bg: #f5f6fb;
@@ -16,6 +19,7 @@
   --shadow: 0 1px 2px rgba(20, 20, 50, .05);
 }
 
+/* Бежевая */
 :root[data-theme="beige"] {
   --bg: #f4ecdc;
   --card: #fffaf0;
@@ -31,6 +35,7 @@
   --shadow: 0 1px 2px rgba(80, 60, 30, .06);
 }
 
+/* Тёмная */
 :root[data-theme="dark"] {
   --bg: #12131c;
   --card: #1c1e2c;
@@ -46,7 +51,9 @@
   --shadow: none;
 }
 
-/* ============ Базовое ============ */
+/* ============================================================
+   БАЗОВОЕ
+   ============================================================ */
 * { box-sizing: border-box; }
 html, body { height: 100%; }
 
@@ -71,35 +78,9 @@ h1 { font-size: 26px; margin: 8px 0 4px; }
 h2 { font-size: 20px; margin: 0 0 12px; }
 .sub { color: var(--mu); margin: 0 0 20px; }
 
-/* ============ Разделы ============ */
-.section-title {
-  font-size: 13px;
-  text-transform: uppercase;
-  letter-spacing: .06em;
-  color: var(--mu);
-  font-weight: 700;
-  margin: 22px 0 10px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-.section-title:first-of-type { margin-top: 4px; }
-.section-title .tag {
-  font-size: 11px;
-  font-weight: 600;
-  padding: 2px 8px;
-  border-radius: 999px;
-  background: var(--bd);
-  color: var(--mu);
-  text-transform: none;
-  letter-spacing: 0;
-}
-.section-title .tag.hard {
-  background: color-mix(in srgb, var(--no) 15%, var(--card));
-  color: var(--no);
-}
-
-/* ============ Сетка ============ */
+/* ============================================================
+   СЕТКА
+   ============================================================ */
 .grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -109,7 +90,9 @@ h2 { font-size: 20px; margin: 0 0 12px; }
   .grid { grid-template-columns: 1fr; }
 }
 
-/* ============ Карточки ============ */
+/* ============================================================
+   КАРТОЧКИ
+   ============================================================ */
 .card {
   background: var(--card);
   border: 1px solid var(--bd);
@@ -125,6 +108,8 @@ h2 { font-size: 20px; margin: 0 0 12px; }
   color: inherit;
   transition: transform .1s, border-color .15s;
   position: relative;
+  display: block;
+  width: 100%;
 }
 .subj:hover { border-color: var(--ac); }
 .subj:active { transform: scale(.97); }
@@ -142,17 +127,10 @@ h2 { font-size: 20px; margin: 0 0 12px; }
   padding: 2px 8px;
   font-weight: 600;
 }
-.subj.hard {
-  border-color: color-mix(in srgb, var(--no) 30%, var(--bd));
-}
-.subj.hard:hover {
-  border-color: var(--no);
-}
-.subj.hard .badge {
-  background: var(--no);
-}
 
-/* ============ Прогресс ============ */
+/* ============================================================
+   ПРОГРЕСС
+   ============================================================ */
 .bar {
   height: 8px;
   background: var(--bd);
@@ -167,7 +145,9 @@ h2 { font-size: 20px; margin: 0 0 12px; }
   transition: width .3s;
 }
 
-/* ============ Опции ============ */
+/* ============================================================
+   ОПЦИИ
+   ============================================================ */
 .opt {
   display: block;
   width: 100%;
@@ -188,7 +168,9 @@ h2 { font-size: 20px; margin: 0 0 12px; }
   background: color-mix(in srgb, var(--ac) 12%, var(--card));
 }
 
-/* ============ Кнопки ============ */
+/* ============================================================
+   КНОПКИ
+   ============================================================ */
 .btn {
   width: 100%;
   font: inherit;
@@ -212,7 +194,9 @@ h2 { font-size: 20px; margin: 0 0 12px; }
 }
 .btn.g:hover { border-color: var(--ac); }
 
-/* ============ Верхняя строка ============ */
+/* ============================================================
+   ВЕРХНЯЯ СТРОКА
+   ============================================================ */
 .top {
   display: flex;
   justify-content: space-between;
@@ -251,7 +235,9 @@ h2 { font-size: 20px; margin: 0 0 12px; }
   padding: 0;
 }
 
-/* ============ Результат ============ */
+/* ============================================================
+   РЕЗУЛЬТАТ
+   ============================================================ */
 .grade { text-align: center; }
 .grade .n {
   font-size: 88px;
@@ -273,7 +259,9 @@ h2 { font-size: 20px; margin: 0 0 12px; }
 .row { display: flex; gap: 8px; }
 .row .btn { flex: 1; }
 
-/* ============ Облако ============ */
+/* ============================================================
+   ОБЛАКО
+   ============================================================ */
 .cloud {
   display: flex;
   align-items: center;
@@ -312,7 +300,9 @@ h2 { font-size: 20px; margin: 0 0 12px; }
   text-underline-offset: 2px;
 }
 
-/* ============ Модалки ============ */
+/* ============================================================
+   МОДАЛКИ
+   ============================================================ */
 .modal-bg {
   position: fixed;
   inset: 0;
@@ -343,7 +333,9 @@ h2 { font-size: 20px; margin: 0 0 12px; }
   margin-bottom: 10px;
 }
 
-/* ============ История ============ */
+/* ============================================================
+   ИСТОРИЯ
+   ============================================================ */
 .hist {
   display: flex;
   flex-direction: column;
@@ -370,7 +362,9 @@ h2 { font-size: 20px; margin: 0 0 12px; }
 .hitem .g.g2 { color: var(--no); }
 .hitem small { color: var(--mu); display: block; }
 
-/* ============ Выбор темы ============ */
+/* ============================================================
+   ВЫБОР ТЕМЫ
+   ============================================================ */
 .themepick {
   display: flex;
   gap: 6px;

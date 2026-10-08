@@ -6,6 +6,7 @@
   const USER_KEY = "tests_user_v11";
   const LOCAL_BEST = "tests_best_v11";
 
+  // Проверка, что questions.js загрузился
   if (typeof SUBJECTS === "undefined") {
     app.innerHTML =
       '<div class="card" style="margin-top:40px">' +
@@ -30,11 +31,13 @@
     return (window.matchMedia && window.matchMedia("(prefers-color-scheme:dark)").matches)
       ? "dark" : "light";
   }
+
   function setTheme(t) {
     if (THEMES.indexOf(t) === -1) t = "light";
     try { localStorage.setItem(THEME_KEY, t); } catch (e) {}
     document.documentElement.setAttribute("data-theme", t);
   }
+
   setTheme(getTheme());
 
   /* ============ Пользователь ============ */
@@ -49,6 +52,7 @@
   let localBest = {};
   try { localBest = JSON.parse(localStorage.getItem(LOCAL_BEST) || "{}"); }
   catch (e) { localBest = {}; }
+
   function saveLocalBest() {
     try { localStorage.setItem(LOCAL_BEST, JSON.stringify(localBest)); } catch (e) {}
   }
@@ -167,13 +171,19 @@
 
     document.getElementById("themeBtn").addEventListener("click", showThemePicker);
     document.getElementById("userBtn").addEventListener("click", showUserModal);
+
     const loginBtn = document.getElementById("loginBtn");
     if (loginBtn) loginBtn.addEventListener("click", showUserModal);
+
     const logoutBtn = document.getElementById("logoutBtn");
     if (logoutBtn) logoutBtn.addEventListener("click", function () {
-      setUser(""); cloudCache = {}; cloudStatus = "off"; renderHome();
+      setUser("");
+      cloudCache = {};
+      cloudStatus = "off";
+      renderHome();
     });
 
+    // Делегирование кликов по карточкам (ставим один раз)
     if (!cardListenerAttached) {
       app.addEventListener("click", function (e) {
         const btn = e.target.closest(".subj");
@@ -190,6 +200,7 @@
     const cloud = cloudCache[s.id];
     const grade = cloud && cloud.best ? cloud.best : localBest[s.id];
 
+    // Реальное количество вопросов
     const qCount = s.q.length;
     const expected = typeof s.expected === "number" ? s.expected : qCount;
     const warn = qCount !== expected ? " · ⚠️ ожидается " + expected : "";
@@ -204,7 +215,7 @@
     '</button>';
   }
 
-  /* ============ Тема (модалка) ============ */
+  /* ============ Выбор темы ============ */
   function showThemePicker() {
     const cur = getTheme();
     const bg = document.createElement("div");
@@ -223,9 +234,11 @@
         '<button class="btn" id="closeBtn" style="margin-top:14px">Готово</button>' +
       '</div>';
     document.body.appendChild(bg);
+
     bg.addEventListener("click", function (e) {
       if (e.target === bg || e.target.id === "closeBtn") bg.remove();
     });
+
     bg.querySelectorAll(".themepick button").forEach(function (b) {
       b.addEventListener("click", function () {
         setTheme(b.dataset.t);
@@ -261,11 +274,14 @@
           : '') +
       '</div>';
     document.body.appendChild(bg);
+
     const input = bg.querySelector("#nameInput");
     setTimeout(function () { input.focus(); }, 50);
+
     bg.addEventListener("click", function (e) {
       if (e.target === bg || e.target.id === "cancelBtn") bg.remove();
     });
+
     bg.querySelector("#saveBtn").addEventListener("click", async function () {
       const name = input.value.trim();
       if (!name) { input.focus(); return; }
@@ -274,9 +290,11 @@
       await refreshCloud();
       renderHome();
     });
+
     const histBtn = bg.querySelector("#histBtn");
     if (histBtn) histBtn.addEventListener("click", function () {
-      bg.remove(); showHistory();
+      bg.remove();
+      showHistory();
     });
   }
 
@@ -307,21 +325,24 @@
       '<div class="modal">' +
         '<h2>📊 Результаты · ' + escapeHtml(user) + '</h2>' +
         (items.length
-          ? '<div class="hist">' + items.map(function (it) {
-              return '<div class="hitem">' +
-                '<div>' +
-                  '<b>' + it.s.e + ' ' + escapeHtml(it.s.n) + '</b>' +
-                  '<small>' + (it.h.date ? fmtDate(it.h.date) : "—") +
-                    ' · ' + it.h.correct + '/' + it.h.total +
-                    ' (' + it.h.percent + '%)</small>' +
-                '</div>' +
-                '<div class="g g' + it.h.grade + '">' + it.h.grade + '</div>' +
-              '</div>';
-            }).join("") + '</div>'
+          ? '<div class="hist">' +
+              items.map(function (it) {
+                return '<div class="hitem">' +
+                  '<div>' +
+                    '<b>' + it.s.e + ' ' + escapeHtml(it.s.n) + '</b>' +
+                    '<small>' + (it.h.date ? fmtDate(it.h.date) : "—") +
+                      ' · ' + it.h.correct + '/' + it.h.total +
+                      ' (' + it.h.percent + '%)</small>' +
+                  '</div>' +
+                  '<div class="g g' + it.h.grade + '">' + it.h.grade + '</div>' +
+                '</div>';
+              }).join("") +
+            '</div>'
           : '<p class="sub">Пока нет результатов. Пройдите любой тест!</p>') +
         '<button class="btn" id="closeBtn">Закрыть</button>' +
       '</div>';
     document.body.appendChild(bg);
+
     bg.addEventListener("click", function (e) {
       if (e.target === bg || e.target.id === "closeBtn") bg.remove();
     });
@@ -332,6 +353,7 @@
     const subject = SUBJECTS.find(function (s) { return s.id === id; });
     if (!subject) { console.error("Предмет не найден: " + id); return; }
 
+    // Берём ВСЕ вопросы, каждый — ровно один раз
     const total = subject.q.length;
     const picked = pickUnique(subject.q, total);
 
@@ -386,6 +408,7 @@
         state = null; renderHome();
       }
     });
+
     document.getElementById("options").addEventListener("click", function (e) {
       const btn = e.target.closest(".opt");
       if (!btn) return;
@@ -395,9 +418,11 @@
       });
       document.getElementById("nextBtn").disabled = false;
     });
+
     document.getElementById("skipBtn").addEventListener("click", function () {
       state.answers.push(null); state.selected = null; advance();
     });
+
     document.getElementById("nextBtn").addEventListener("click", function () {
       if (state.selected === null) return;
       state.answers.push(state.selected); state.selected = null; advance();
@@ -443,6 +468,7 @@
       localBest[subject.id] = grade;
       saveLocalBest();
     }
+
     const user = getUser();
     if (user) {
       CloudSafe.pushResult(user, subject.id, grade, {
