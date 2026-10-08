@@ -48,7 +48,7 @@
 
   /* ============ Облако ============ */
   let cloudCache = {};
-  let cloudStatus = "off"; // "on" | "off" | "sync"
+  let cloudStatus = "off";
 
   const CloudSafe = {
     isCloudEnabled: function () {
@@ -95,6 +95,21 @@
       const t = a[i]; a[i] = a[j]; a[j] = t;
     }
     return a;
+  }
+
+  /**
+   * Выбирает n вопросов без повторов из массива.
+   * Если запрошено больше, чем есть — вернёт все.
+   */
+  function pickUnique(pool, n) {
+    const copy = pool.slice();
+    const result = [];
+    const count = Math.min(n, copy.length);
+    for (let i = 0; i < count; i++) {
+      const idx = Math.floor(Math.random() * copy.length);
+      result.push(copy.splice(idx, 1)[0]);
+    }
+    return result;
   }
 
   function escapeHtml(str) {
@@ -316,7 +331,10 @@
     const subject = SUBJECTS.find(function (s) { return s.id === id; });
     if (!subject) return;
 
-    const questions = shuffle(subject.q).map(function (q) {
+    // Берём все 50 уникальных вопросов (pickUnique гарантирует отсутствие повторов)
+    const picked = pickUnique(subject.q, REQUIRED_Q);
+
+    const questions = picked.map(function (q) {
       const opts = q[1].map(function (text, i) {
         return { text: text, correct: i === q[2] };
       });

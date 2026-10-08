@@ -7,9 +7,8 @@
   "use strict";
 
   const CONFIG = {
-    // Получите бесплатно на https://jsonbin.io
-    BIN_ID: "",      // например "64f1a2b3c4d5e6f7a8b9c0d1"
-    API_KEY: "",     // ваш X-Master-Key
+    BIN_ID: "",
+    API_KEY: "",
     BASE: "https://api.jsonbin.io/v3/b"
   };
 
@@ -28,10 +27,6 @@
     try { localStorage.setItem(LOCAL_KEY, JSON.stringify(data)); } catch (e) {}
   }
 
-  /**
-   * Загрузить все результаты.
-   * @returns {Promise<Object>}
-   */
   async function load() {
     if (!hasCloud()) return readLocal();
     try {
@@ -49,11 +44,6 @@
     }
   }
 
-  /**
-   * Сохранить все результаты.
-   * @param {Object} data
-   * @returns {Promise<boolean>}
-   */
   async function save(data) {
     writeLocal(data);
     if (!hasCloud()) return true;
@@ -73,14 +63,6 @@
     }
   }
 
-  /**
-   * Добавить результат пользователя.
-   * @param {string} username
-   * @param {string} subjectId
-   * @param {number} grade
-   * @param {{correct:number,total:number,percent:number}} stats
-   * @returns {Promise<boolean>}
-   */
   async function pushResult(username, subjectId, grade, stats) {
     if (!username) return false;
     const data = await load();
@@ -100,11 +82,6 @@
     return await save(data);
   }
 
-  /**
-   * Получить данные пользователя.
-   * @param {string} username
-   * @returns {Promise<Object>}
-   */
   async function getUser(username) {
     if (!username) return {};
     const data = await load();
