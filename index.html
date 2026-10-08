@@ -6,6 +6,18 @@
 <meta name="theme-color" content="#4f46e5">
 <title>Тесты</title>
 <link rel="stylesheet" href="style.css">
+<script>
+  // Применяем тему ДО рендера, чтобы не было вспышки
+  (function () {
+    try {
+      var t = localStorage.getItem("tests_theme_v11");
+      if (!t || ["light", "beige", "dark"].indexOf(t) === -1) {
+        t = (window.matchMedia && window.matchMedia("(prefers-color-scheme:dark)").matches) ? "dark" : "light";
+      }
+      document.documentElement.setAttribute("data-theme", t);
+    } catch (e) {}
+  })();
+</script>
 </head>
 <body>
 <main id="app"></main>

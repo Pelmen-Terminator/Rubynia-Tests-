@@ -1,7 +1,7 @@
 /**
  * cloud.js
- * Простое "облако" для сохранения результатов.
- * Работает через jsonbin.io. Если ключ не задан — fallback на localStorage.
+ * Простое "облако" для сохранения результатов через jsonbin.io.
+ * Если BIN_ID/API_KEY не заданы — работает локальный кэш.
  */
 (function () {
   "use strict";
@@ -16,7 +16,7 @@
   const LOCAL_KEY = "tests_cloud_cache_v1";
 
   function hasCloud() {
-    return CONFIG.BIN_ID && CONFIG.API_KEY;
+    return !!(CONFIG.BIN_ID && CONFIG.API_KEY);
   }
 
   function readLocal() {
@@ -30,12 +30,12 @@
 
   /**
    * Загрузить все результаты.
-   * @returns {Promise<Object>} { username: { subjectId: { best, history: [...] } } }
+   * @returns {Promise<Object>}
    */
   async function load() {
     if (!hasCloud()) return readLocal();
     try {
-      const res = await fetch(`${CONFIG.BASE}/${CONFIG.BIN_ID}/latest`, {
+      const res = await fetch(CONFIG.BASE + "/" + CONFIG.BIN_ID + "/latest", {
         headers: { "X-Master-Key": CONFIG.API_KEY }
       });
       if (!res.ok) throw new Error("HTTP " + res.status);
@@ -52,12 +52,13 @@
   /**
    * Сохранить все результаты.
    * @param {Object} data
+   * @returns {Promise<boolean>}
    */
   async function save(data) {
     writeLocal(data);
     if (!hasCloud()) return true;
     try {
-      const res = await fetch(`${CONFIG.BASE}/${CONFIG.BIN_ID}`, {
+      const res = await fetch(CONFIG.BASE + "/" + CONFIG.BIN_ID, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
@@ -73,11 +74,12 @@
   }
 
   /**
-   * Обновить один результат пользователя.
+   * Добавить результат пользователя.
    * @param {string} username
    * @param {string} subjectId
    * @param {number} grade
    * @param {{correct:number,total:number,percent:number}} stats
+   * @returns {Promise<boolean>}
    */
   async function pushResult(username, subjectId, grade, stats) {
     if (!username) return false;
@@ -87,7 +89,7 @@
     cur.best = Math.max(cur.best || 0, grade);
     cur.history = cur.history || [];
     cur.history.push({
-      grade,
+      grade: grade,
       correct: stats.correct,
       total: stats.total,
       percent: stats.percent,
@@ -100,6 +102,8 @@
 
   /**
    * Получить данные пользователя.
+   * @param {string} username
+   * @returns {Promise<Object>}
    */
   async function getUser(username) {
     if (!username) return {};
@@ -107,12 +111,15 @@
     return data[username] || {};
   }
 
-  /**
-   * Есть ли облако.
-   */
   function isCloudEnabled() {
     return hasCloud();
   }
 
-  window.Cloud = { load, save, pushResult, getUser, isCloudEnabled };
+  window.Cloud = {
+    load: load,
+    save: save,
+    pushResult: pushResult,
+    getUser: getUser,
+    isCloudEnabled: isCloudEnabled
+  };
 })();
