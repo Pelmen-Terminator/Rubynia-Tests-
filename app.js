@@ -6,15 +6,14 @@
   const USER_KEY = "tests_user_v11";
   const LOCAL_BEST = "tests_best_v11";
 
-  // Проверка, что questions.js загрузился
-  if (typeof SUBJECTS === "undefined" || typeof HARD_SUBJECTS === "undefined") {
+  if (typeof SUBJECTS === "undefined") {
     app.innerHTML =
       '<div class="card" style="margin-top:40px">' +
         '<h2>⚠️ Ошибка загрузки</h2>' +
-        '<p class="sub">Файл <code>questions.js</code> не загрузился или содержит ' +
-        'синтаксическую ошибку. Откройте консоль (F12).</p>' +
+        '<p class="sub">Файл <code>questions.js</code> не загрузился ' +
+        'или содержит синтаксическую ошибку. Откройте консоль (F12).</p>' +
       '</div>';
-    console.error("SUBJECTS или HARD_SUBJECTS не определены.");
+    console.error("SUBJECTS не определён.");
     return;
   }
 
@@ -123,13 +122,9 @@
     } catch (e) { return ""; }
   }
 
-  function allSubjects() {
-    return SUBJECTS.concat(HARD_SUBJECTS);
-  }
-
   function totalQuestions() {
     let sum = 0;
-    allSubjects().forEach(function (s) { sum += s.q.length; });
+    SUBJECTS.forEach(function (s) { sum += s.q.length; });
     return sum;
   }
 
@@ -165,18 +160,9 @@
           ? '<button class="link" id="logoutBtn">выйти</button>'
           : '<button class="link" id="loginBtn">войти</button>') +
       '</div>' +
-      '<p class="sub">Всего ' + totalQuestions() + ' вопросов. Выберите раздел и предмет.</p>' +
-      '<div class="section-title">Обычные тесты <span class="tag">' +
-        SUBJECTS.length + ' предметов</span></div>' +
+      '<p class="sub">Всего ' + totalQuestions() + ' вопросов. Выберите предмет.</p>' +
       '<div class="grid">' +
-        SUBJECTS.map(function (s) { return renderSubjectCard(s, false); }).join("") +
-      '</div>' +
-      '<div class="section-title">Сложные тесты <span class="tag hard">' +
-        HARD_SUBJECTS.length +
-        (HARD_SUBJECTS.length === 1 ? ' предмет' : ' предмета') +
-      '</span></div>' +
-      '<div class="grid">' +
-        HARD_SUBJECTS.map(function (s) { return renderSubjectCard(s, true); }).join("") +
+        SUBJECTS.map(function (s) { return renderSubjectCard(s); }).join("") +
       '</div>';
 
     document.getElementById("themeBtn").addEventListener("click", showThemePicker);
@@ -188,7 +174,6 @@
       setUser(""); cloudCache = {}; cloudStatus = "off"; renderHome();
     });
 
-    // Делегирование клика по карточкам — ставим один раз
     if (!cardListenerAttached) {
       app.addEventListener("click", function (e) {
         const btn = e.target.closest(".subj");
@@ -201,7 +186,7 @@
     }
   }
 
-  function renderSubjectCard(s, hard) {
+  function renderSubjectCard(s) {
     const cloud = cloudCache[s.id];
     const grade = cloud && cloud.best ? cloud.best : localBest[s.id];
 
@@ -209,8 +194,7 @@
     const expected = typeof s.expected === "number" ? s.expected : qCount;
     const warn = qCount !== expected ? " · ⚠️ ожидается " + expected : "";
 
-    const cls = "card subj" + (hard ? " hard" : "");
-    return '<button class="' + cls + '" data-id="' + s.id + '" type="button">' +
+    return '<button class="card subj" data-id="' + s.id + '" type="button">' +
       (grade ? '<span class="badge">' + grade + '</span>' : '') +
       '<span class="e">' + s.e + '</span>' +
       '<b>' + escapeHtml(s.n) + '</b>' +
@@ -304,7 +288,7 @@
     await refreshCloud();
 
     const items = [];
-    allSubjects().forEach(function (s) {
+    SUBJECTS.forEach(function (s) {
       const c = cloudCache[s.id];
       if (!c) return;
       if (c.history && c.history.length) {
@@ -345,7 +329,7 @@
 
   /* ============ Тест ============ */
   function startTest(id) {
-    const subject = allSubjects().find(function (s) { return s.id === id; });
+    const subject = SUBJECTS.find(function (s) { return s.id === id; });
     if (!subject) { console.error("Предмет не найден: " + id); return; }
 
     const total = subject.q.length;
@@ -530,7 +514,7 @@
   /* ============ Старт ============ */
   (async function init() {
     try {
-      allSubjects().forEach(function (s) {
+      SUBJECTS.forEach(function (s) {
         const exp = typeof s.expected === "number" ? s.expected : s.q.length;
         if (s.q.length !== exp) {
           console.warn("⚠️ " + s.n + ": " + s.q.length +
@@ -545,7 +529,6 @@
         '<div class="card" style="margin-top:40px">' +
           '<h2>⚠️ Ошибка</h2>' +
           '<p class="sub">' + escapeHtml(e.message) + '</p>' +
-          '<p class="sub">Откройте консоль (F12) для деталей.</p>' +
         '</div>';
     }
   })();
