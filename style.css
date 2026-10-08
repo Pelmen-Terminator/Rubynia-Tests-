@@ -1,6 +1,5 @@
 /* ============ Темы ============ */
 
-/* Светлая (по умолчанию) */
 :root,
 :root[data-theme="light"] {
   --bg: #f5f6fb;
@@ -17,7 +16,6 @@
   --shadow: 0 1px 2px rgba(20, 20, 50, .05);
 }
 
-/* Бежевая */
 :root[data-theme="beige"] {
   --bg: #f4ecdc;
   --card: #fffaf0;
@@ -33,7 +31,6 @@
   --shadow: 0 1px 2px rgba(80, 60, 30, .06);
 }
 
-/* Тёмная */
 :root[data-theme="dark"] {
   --bg: #12131c;
   --card: #1c1e2c;
@@ -73,6 +70,34 @@ main {
 h1 { font-size: 26px; margin: 8px 0 4px; }
 h2 { font-size: 20px; margin: 0 0 12px; }
 .sub { color: var(--mu); margin: 0 0 20px; }
+
+/* ============ Разделы ============ */
+.section-title {
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  color: var(--mu);
+  font-weight: 700;
+  margin: 22px 0 10px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.section-title:first-of-type { margin-top: 4px; }
+.section-title .tag {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: var(--bd);
+  color: var(--mu);
+  text-transform: none;
+  letter-spacing: 0;
+}
+.section-title .tag.hard {
+  background: color-mix(in srgb, var(--no) 15%, var(--card));
+  color: var(--no);
+}
 
 /* ============ Сетка ============ */
 .grid {
@@ -116,6 +141,15 @@ h2 { font-size: 20px; margin: 0 0 12px; }
   border-radius: 999px;
   padding: 2px 8px;
   font-weight: 600;
+}
+.subj.hard {
+  border-color: color-mix(in srgb, var(--no) 30%, var(--bd));
+}
+.subj.hard:hover {
+  border-color: var(--no);
+}
+.subj.hard .badge {
+  background: var(--no);
 }
 
 /* ============ Прогресс ============ */

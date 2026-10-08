@@ -5,7 +5,6 @@
   const THEME_KEY = "tests_theme_v11";
   const USER_KEY = "tests_user_v11";
   const LOCAL_BEST = "tests_best_v11";
-  const REQUIRED_Q = 50;
 
   /* ============ Тема ============ */
   const THEMES = ["light", "beige", "dark"];
@@ -55,10 +54,6 @@
       return window.Cloud && window.Cloud.isCloudEnabled
         ? window.Cloud.isCloudEnabled() : false;
     },
-    load: async function () {
-      if (!window.Cloud) return {};
-      try { return await window.Cloud.load(); } catch (e) { return {}; }
-    },
     getUser: async function (name) {
       if (!window.Cloud) return {};
       try { return await window.Cloud.getUser(name); } catch (e) { return {}; }
@@ -98,7 +93,7 @@
   }
 
   /**
-   * Выбирает n вопросов без повторов из массива.
+   * Уникальная выборка без повторов.
    * Если запрошено больше, чем есть — вернёт все.
    */
   function pickUnique(pool, n) {
@@ -129,9 +124,13 @@
     } catch (e) { return ""; }
   }
 
+  function allSubjects() {
+    return SUBJECTS.concat(HARD_SUBJECTS);
+  }
+
   function totalQuestions() {
     let sum = 0;
-    SUBJECTS.forEach(function (s) { sum += s.q.length; });
+    allSubjects().forEach(function (s) { sum += s.q.length; });
     return sum;
   }
 
@@ -164,22 +163,16 @@
           ? '<button class="link" id="logoutBtn">выйти</button>'
           : '<button class="link" id="loginBtn">войти</button>') +
       '</div>' +
-      '<p class="sub">Выберите предмет. Всего ' + totalQuestions() + ' вопросов, по ' + REQUIRED_Q + ' на предмет.</p>' +
+      '<p class="sub">Всего ' + totalQuestions() + ' вопросов. Выберите раздел и предмет.</p>' +
+
+      '<div class="section-title">Обычные тесты <span class="tag">' + SUBJECTS.length + ' предметов</span></div>' +
       '<div class="grid">' +
-        SUBJECTS.map(function (s) {
-          const cloud = cloudCache[s.id];
-          const grade = cloud && cloud.best ? cloud.best : localBest[s.id];
-          const qCount = s.q.length;
-          const warn = qCount !== REQUIRED_Q ? " ⚠️" + qCount : "";
-          return '<button class="card subj" data-id="' + s.id + '">' +
-            (grade ? '<span class="badge">' + grade + '</span>' : '') +
-            '<span class="e">' + s.e + '</span>' +
-            '<b>' + escapeHtml(s.n) + '</b>' +
-            '<small>' + qCount + ' вопр.' + warn +
-              (grade ? ' · лучшая: ' + grade : ' · не пройден') +
-            '</small>' +
-          '</button>';
-        }).join("") +
+        SUBJECTS.map(renderSubjectCard).join("") +
+      '</div>' +
+
+      '<div class="section-title">Сложные тесты <span class="tag hard">' + HARD_SUBJECTS.length + ' предмет</span></div>' +
+      '<div class="grid">' +
+        HARD_SUBJECTS.map(function (s) { return renderSubjectCard(s, true); }).join("") +
       '</div>';
 
     document.getElementById("themeBtn").addEventListener("click", showThemePicker);
@@ -198,6 +191,24 @@
     app.querySelectorAll(".subj").forEach(function (btn) {
       btn.addEventListener("click", function () { startTest(btn.dataset.id); });
     });
+  }
+
+  function renderSubjectCard(s, hard) {
+    const cloud = cloudCache[s.id];
+    const grade = cloud && cloud.best ? cloud.best : localBest[s.id];
+    // Используем РЕАЛЬНОЕ количество вопросов, а не expected — так исключается баг «51»
+    const qCount = s.q.length;
+    const expected = typeof s.expected === "number" ? s.expected : qCount;
+    const warn = qCount !== expected ? " ⚠️" + qCount : "";
+    const cls = "card subj" + (hard ? " hard" : "");
+    return '<button class="' + cls + '" data-id="' + s.id + '">' +
+      (grade ? '<span class="badge">' + grade + '</span>' : '') +
+      '<span class="e">' + s.e + '</span>' +
+      '<b>' + escapeHtml(s.n) + '</b>' +
+      '<small>' + qCount + ' вопр.' + warn +
+        (grade ? ' · лучшая: ' + grade : ' · не пройден') +
+      '</small>' +
+    '</button>';
   }
 
   /* ============ Выбор темы ============ */
@@ -284,7 +295,7 @@
     await refreshCloud();
 
     const items = [];
-    SUBJECTS.forEach(function (s) {
+    allSubjects().forEach(function (s) {
       const c = cloudCache[s.id];
       if (!c) return;
       if (c.history && c.history.length) {
@@ -328,11 +339,12 @@
 
   /* ============ Запуск теста ============ */
   function startTest(id) {
-    const subject = SUBJECTS.find(function (s) { return s.id === id; });
+    const subject = allSubjects().find(function (s) { return s.id === id; });
     if (!subject) return;
 
-    // Берём все 50 уникальных вопросов (pickUnique гарантирует отсутствие повторов)
-    const picked = pickUnique(subject.q, REQUIRED_Q);
+    // Каждый вопрос используется ровно один раз
+    const total = subject.q.length;
+    const picked = pickUnique(subject.q, total);
 
     const questions = picked.map(function (q) {
       const opts = q[1].map(function (text, i) {
@@ -525,10 +537,11 @@
 
   /* ============ Старт ============ */
   (async function init() {
-    SUBJECTS.forEach(function (s) {
-      if (s.q.length !== REQUIRED_Q) {
-        console.warn("⚠️ " + s.n + ": " + s.q.length +
-          " вопросов (ожидается " + REQUIRED_Q + ")");
+    // Автопроверка количества вопросов
+    allSubjects().forEach(function (s) {
+      const exp = typeof s.expected === "number" ? s.expected : s.q.length;
+      if (s.q.length !== exp) {
+        console.warn("⚠️ " + s.n + ": " + s.q.length + " вопросов (ожидается " + exp + ")");
       }
     });
     await refreshCloud();
