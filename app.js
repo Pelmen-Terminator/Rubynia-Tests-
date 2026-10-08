@@ -6,7 +6,9 @@
   const USER_KEY = "tests_user_v11";
   const LOCAL_BEST = "tests_best_v11";
 
-  /* ============ Тема ============ */
+  /* ============================================================
+     ТЕМА
+     ============================================================ */
   const THEMES = ["light", "beige", "dark"];
   const THEME_LABELS = { light: "☀️", beige: "📜", dark: "🌙" };
   const THEME_NAMES = { light: "Светлая", beige: "Бежевая", dark: "Тёмная" };
@@ -28,7 +30,9 @@
 
   setTheme(getTheme());
 
-  /* ============ Пользователь ============ */
+  /* ============================================================
+     ПОЛЬЗОВАТЕЛЬ
+     ============================================================ */
   function getUser() {
     try { return localStorage.getItem(USER_KEY) || ""; } catch (e) { return ""; }
   }
@@ -36,7 +40,9 @@
     try { localStorage.setItem(USER_KEY, name); } catch (e) {}
   }
 
-  /* ============ Локальный best ============ */
+  /* ============================================================
+     ЛОКАЛЬНЫЙ BEST
+     ============================================================ */
   let localBest = {};
   try { localBest = JSON.parse(localStorage.getItem(LOCAL_BEST) || "{}"); }
   catch (e) { localBest = {}; }
@@ -45,9 +51,11 @@
     try { localStorage.setItem(LOCAL_BEST, JSON.stringify(localBest)); } catch (e) {}
   }
 
-  /* ============ Облако ============ */
+  /* ============================================================
+     ОБЛАКО
+     ============================================================ */
   let cloudCache = {};
-  let cloudStatus = "off";
+  let cloudStatus = "off"; // "on" | "off" | "sync"
 
   const CloudSafe = {
     isCloudEnabled: function () {
@@ -82,7 +90,9 @@
     }
   }
 
-  /* ============ Утилиты ============ */
+  /* ============================================================
+     УТИЛИТЫ
+     ============================================================ */
   function shuffle(arr) {
     const a = arr.slice();
     for (let i = a.length - 1; i > 0; i--) {
@@ -134,10 +144,17 @@
     return sum;
   }
 
-  /* ============ Состояние ============ */
+  /* ============================================================
+     СОСТОЯНИЕ
+     ============================================================ */
   let state = null;
+  // {
+  //   subject, index, selected, answers, questions, startTime
+  // }
 
-  /* ============ Главная ============ */
+  /* ============================================================
+     ГЛАВНАЯ
+     ============================================================ */
   function renderHome() {
     const user = getUser();
     const statusClass = cloudStatus === "on" ? "on"
@@ -152,10 +169,13 @@
       '<div class="top">' +
         '<h1>🎓 Тесты</h1>' +
         '<div class="tools">' +
-          '<button class="iconbtn" id="themeBtn" title="Сменить тему">' + THEME_LABELS[getTheme()] + '</button>' +
+          '<button class="iconbtn" id="themeBtn" title="Сменить тему">' +
+            THEME_LABELS[getTheme()] +
+          '</button>' +
           '<button class="iconbtn" id="userBtn" title="Профиль">👤</button>' +
         '</div>' +
       '</div>' +
+
       '<div class="cloud ' + statusClass + '">' +
         '<span class="dot"></span>' +
         '<span style="flex:1">' + statusText + '</span>' +
@@ -163,14 +183,23 @@
           ? '<button class="link" id="logoutBtn">выйти</button>'
           : '<button class="link" id="loginBtn">войти</button>') +
       '</div>' +
+
       '<p class="sub">Всего ' + totalQuestions() + ' вопросов. Выберите раздел и предмет.</p>' +
 
-      '<div class="section-title">Обычные тесты <span class="tag">' + SUBJECTS.length + ' предметов</span></div>' +
+      '<div class="section-title">' +
+        'Обычные тесты ' +
+        '<span class="tag">' + SUBJECTS.length + ' предметов</span>' +
+      '</div>' +
       '<div class="grid">' +
-        SUBJECTS.map(renderSubjectCard).join("") +
+        SUBJECTS.map(function (s) { return renderSubjectCard(s, false); }).join("") +
       '</div>' +
 
-      '<div class="section-title">Сложные тесты <span class="tag hard">' + HARD_SUBJECTS.length + ' предмет</span></div>' +
+      '<div class="section-title">' +
+        'Сложные тесты ' +
+        '<span class="tag hard">' + HARD_SUBJECTS.length +
+          (HARD_SUBJECTS.length === 1 ? ' предмет' : ' предмета') +
+        '</span>' +
+      '</div>' +
       '<div class="grid">' +
         HARD_SUBJECTS.map(function (s) { return renderSubjectCard(s, true); }).join("") +
       '</div>';
@@ -180,6 +209,7 @@
 
     const loginBtn = document.getElementById("loginBtn");
     if (loginBtn) loginBtn.addEventListener("click", showUserModal);
+
     const logoutBtn = document.getElementById("logoutBtn");
     if (logoutBtn) logoutBtn.addEventListener("click", function () {
       setUser("");
@@ -193,13 +223,19 @@
     });
   }
 
+  /**
+   * Карточка предмета.
+   * Показывает РЕАЛЬНОЕ количество вопросов (s.q.length).
+   * Если оно отличается от s.expected — выводит «⚠️ ожидается N».
+   */
   function renderSubjectCard(s, hard) {
     const cloud = cloudCache[s.id];
     const grade = cloud && cloud.best ? cloud.best : localBest[s.id];
-    // Используем РЕАЛЬНОЕ количество вопросов, а не expected — так исключается баг «51»
+
     const qCount = s.q.length;
     const expected = typeof s.expected === "number" ? s.expected : qCount;
-    const warn = qCount !== expected ? " ⚠️" + qCount : "";
+    const warn = qCount !== expected ? " · ⚠️ ожидается " + expected : "";
+
     const cls = "card subj" + (hard ? " hard" : "");
     return '<button class="' + cls + '" data-id="' + s.id + '">' +
       (grade ? '<span class="badge">' + grade + '</span>' : '') +
@@ -211,7 +247,9 @@
     '</button>';
   }
 
-  /* ============ Выбор темы ============ */
+  /* ============================================================
+     ВЫБОР ТЕМЫ
+     ============================================================ */
   function showThemePicker() {
     const cur = getTheme();
     const bg = document.createElement("div");
@@ -246,7 +284,9 @@
     });
   }
 
-  /* ============ Профиль ============ */
+  /* ============================================================
+     ПРОФИЛЬ
+     ============================================================ */
   function showUserModal() {
     const cur = getUser();
     const bg = document.createElement("div");
@@ -254,13 +294,20 @@
     bg.innerHTML =
       '<div class="modal">' +
         '<h2>Профиль</h2>' +
-        '<p class="sub" style="margin-bottom:10px">Введите имя — результаты будут сохраняться и синхронизироваться.</p>' +
-        '<input id="nameInput" placeholder="Ваше имя" value="' + escapeHtml(cur) + '" maxlength="32">' +
+        '<p class="sub" style="margin-bottom:10px">' +
+          'Введите имя — результаты будут сохраняться и синхронизироваться.' +
+        '</p>' +
+        '<input id="nameInput" placeholder="Ваше имя" value="' +
+          escapeHtml(cur) + '" maxlength="32">' +
         '<div class="row">' +
           '<button class="btn g" id="cancelBtn">Отмена</button>' +
           '<button class="btn" id="saveBtn">Сохранить</button>' +
         '</div>' +
-        (cur ? '<button class="btn g" id="histBtn" style="margin-top:8px">📊 Мои результаты</button>' : '') +
+        (cur
+          ? '<button class="btn g" id="histBtn" style="margin-top:8px">' +
+              '📊 Мои результаты' +
+            '</button>'
+          : '') +
       '</div>';
     document.body.appendChild(bg);
 
@@ -287,7 +334,9 @@
     });
   }
 
-  /* ============ История ============ */
+  /* ============================================================
+     ИСТОРИЯ
+     ============================================================ */
   async function showHistory() {
     const user = getUser();
     if (!user) return;
@@ -303,7 +352,10 @@
           items.push({ s: s, h: h });
         });
       } else if (c.best) {
-        items.push({ s: s, h: { grade: c.best, date: 0, percent: 0, correct: 0, total: 0 } });
+        items.push({
+          s: s,
+          h: { grade: c.best, date: 0, percent: 0, correct: 0, total: 0 }
+        });
       }
     });
     items.sort(function (a, b) { return (b.h.date || 0) - (a.h.date || 0); });
@@ -319,9 +371,11 @@
                 return '<div class="hitem">' +
                   '<div>' +
                     '<b>' + it.s.e + ' ' + escapeHtml(it.s.n) + '</b>' +
-                    '<small>' + (it.h.date ? fmtDate(it.h.date) : "—") +
+                    '<small>' +
+                      (it.h.date ? fmtDate(it.h.date) : "—") +
                       ' · ' + it.h.correct + '/' + it.h.total +
-                      ' (' + it.h.percent + '%)</small>' +
+                      ' (' + it.h.percent + '%)' +
+                    '</small>' +
                   '</div>' +
                   '<div class="g g' + it.h.grade + '">' + it.h.grade + '</div>' +
                 '</div>';
@@ -337,12 +391,14 @@
     });
   }
 
-  /* ============ Запуск теста ============ */
+  /* ============================================================
+     ЗАПУСК ТЕСТА
+     ============================================================ */
   function startTest(id) {
     const subject = allSubjects().find(function (s) { return s.id === id; });
     if (!subject) return;
 
-    // Каждый вопрос используется ровно один раз
+    // Берём ВСЕ вопросы предмета, каждый — ровно один раз
     const total = subject.q.length;
     const picked = pickUnique(subject.q, total);
 
@@ -364,6 +420,9 @@
     renderQuestion();
   }
 
+  /* ============================================================
+     ЭКРАН ВОПРОСА
+     ============================================================ */
   function renderQuestion() {
     const subject = state.subject;
     const questions = state.questions;
@@ -376,13 +435,17 @@
     app.innerHTML =
       '<div class="top">' +
         '<button class="back" id="backBtn">← Назад</button>' +
-        '<span>' + subject.e + ' ' + escapeHtml(subject.n) + ' · ' + (index + 1) + '/' + n + '</span>' +
+        '<span>' +
+          subject.e + ' ' + escapeHtml(subject.n) +
+          ' · ' + (index + 1) + '/' + n +
+        '</span>' +
       '</div>' +
       '<div class="bar"><i style="width:' + progress + '%"></i></div>' +
       '<h2>' + escapeHtml(q.text) + '</h2>' +
       '<div id="options">' +
         q.options.map(function (o, i) {
-          return '<button class="opt' + (selected === i ? " sel" : "") + '" data-i="' + i + '">' +
+          return '<button class="opt' + (selected === i ? " sel" : "") +
+            '" data-i="' + i + '">' +
             escapeHtml(o.text) +
           '</button>';
         }).join("") +
@@ -434,7 +497,9 @@
     }
   }
 
-  /* ============ Результат ============ */
+  /* ============================================================
+     РЕЗУЛЬТАТ
+     ============================================================ */
   async function renderResult() {
     const subject = state.subject;
     const questions = state.questions;
@@ -450,6 +515,7 @@
 
     const percent = Math.round((correct / n) * 100);
     const grade = percent >= 90 ? 5 : percent >= 70 ? 4 : percent >= 50 ? 3 : 2;
+
     const texts = {
       5: "Отлично! Блестящий результат.",
       4: "Хорошо! Совсем немного до идеала.",
@@ -461,11 +527,13 @@
     const mins = Math.floor(elapsed / 60);
     const secs = elapsed % 60;
 
+    // Локальное сохранение
     if (!localBest[subject.id] || grade > localBest[subject.id]) {
       localBest[subject.id] = grade;
       saveLocalBest();
     }
 
+    // Облако (не блокирует UI)
     const user = getUser();
     if (user) {
       CloudSafe.pushResult(user, subject.id, grade, {
@@ -477,15 +545,18 @@
       });
     }
 
+    // Разбор
     const reviewHtml = questions.map(function (q, i) {
       const ans = answers[i];
       const correctOpt = q.options.find(function (o) { return o.correct; });
       const ok = ans !== null && q.options[ans] && q.options[ans].correct;
       const userText = (ans !== null && q.options[ans])
-        ? escapeHtml(q.options[ans].text) : "—";
+        ? escapeHtml(q.options[ans].text)
+        : "—";
       return '<div class="rv ' + (ok ? "ok" : "no") + '">' +
         '<b>' + (ok ? "✅" : "❌") + ' ' + escapeHtml(q.text) + '</b>' +
-        '<small>Ваш ответ: ' + userText +
+        '<small>' +
+          'Ваш ответ: ' + userText +
           (ok ? "" : "<br>Верно: " + escapeHtml(correctOpt.text)) +
         '</small>' +
       '</div>';
@@ -493,11 +564,15 @@
 
     app.innerHTML =
       '<div class="card grade">' +
-        '<div class="sub" style="margin:0">' + subject.e + ' ' + escapeHtml(subject.n) + '</div>' +
+        '<div class="sub" style="margin:0">' +
+          subject.e + ' ' + escapeHtml(subject.n) +
+        '</div>' +
         '<div class="n" style="color:' + colors[grade] + '">' + grade + '</div>' +
         '<b>' + correct + ' из ' + n + ' · ' + percent + '%</b>' +
         '<p class="sub" style="margin:8px 0 0">' + texts[grade] + '</p>' +
-        '<p class="sub" style="margin:4px 0 0;font-size:13px">Время: ' + mins + ' мин ' + secs + ' сек</p>' +
+        '<p class="sub" style="margin:4px 0 0;font-size:13px">' +
+          'Время: ' + mins + ' мин ' + secs + ' сек' +
+        '</p>' +
       '</div>' +
       '<h2 style="margin-top:22px">Разбор ответов</h2>' +
       reviewHtml +
@@ -505,7 +580,9 @@
         '<button class="btn" id="againBtn">Ещё раз</button>' +
         '<button class="btn g" id="homeBtn">К предметам</button>' +
       '</div>' +
-      '<button class="btn g" id="shareBtn" style="margin-top:8px">Поделиться результатом</button>';
+      '<button class="btn g" id="shareBtn" style="margin-top:8px">' +
+        'Поделиться результатом' +
+      '</button>';
 
     document.getElementById("againBtn").addEventListener("click", function () {
       startTest(subject.id);
@@ -521,9 +598,13 @@
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
+  /* ============================================================
+     ПОДЕЛИТЬСЯ
+     ============================================================ */
   function shareResult(subject, grade, correct, total, percent) {
     const text = 'Я прошёл тест «' + subject.n + '» на оценку ' + grade +
       '! ' + correct + '/' + total + ' (' + percent + '%). Попробуй и ты!';
+
     if (navigator.share) {
       navigator.share({ title: "Тесты", text: text }).catch(function () {});
     } else if (navigator.clipboard) {
@@ -535,15 +616,21 @@
     }
   }
 
-  /* ============ Старт ============ */
+  /* ============================================================
+     СТАРТ
+     ============================================================ */
   (async function init() {
     // Автопроверка количества вопросов
     allSubjects().forEach(function (s) {
       const exp = typeof s.expected === "number" ? s.expected : s.q.length;
       if (s.q.length !== exp) {
-        console.warn("⚠️ " + s.n + ": " + s.q.length + " вопросов (ожидается " + exp + ")");
+        console.warn(
+          "⚠️ " + s.n + ": " + s.q.length +
+          " вопросов (ожидается " + exp + ")"
+        );
       }
     });
+
     await refreshCloud();
     renderHome();
   })();
