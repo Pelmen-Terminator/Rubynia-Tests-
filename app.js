@@ -134,7 +134,34 @@
 
   /* ============ Состояние ============ */
   let state = null;
+  let currentCategory = null;
   let cardListenerAttached = false;
+
+  /* ============ Категории (v1.7) ============ */
+  const CATS = (typeof CATEGORIES !== "undefined" && CATEGORIES.length)
+    ? CATEGORIES
+    : [{ id: "all", n: "Все предметы", e: "🎓", subjects: SUBJECTS.map(function (s) { return s.id; }) }];
+
+  function catSubjects(cat) {
+    return cat.subjects.map(function (id) {
+      return SUBJECTS.find(function (s) { return s.id === id; });
+    }).filter(Boolean);
+  }
+
+  function findCategory(id) {
+    return CATS.find(function (c) { return c.id === id; }) || null;
+  }
+
+  function findCategoryBySubject(sid) {
+    return CATS.find(function (c) { return c.subjects.indexOf(sid) !== -1; }) || null;
+  }
+
+  // Возврат на экран категории (или на главную)
+  function goBackToList() {
+    state = null;
+    const cat = currentCategory ? findCategory(currentCategory) : null;
+    if (cat) renderCategory(cat.id); else renderHome();
+  }
 
   /* ============ Главная ============ */
   function renderHome() {
@@ -164,9 +191,9 @@
           ? '<button class="link" id="logoutBtn">выйти</button>'
           : '<button class="link" id="loginBtn">войти</button>') +
       '</div>' +
-      '<p class="sub">Всего ' + totalQuestions() + ' вопросов. Выберите предмет.</p>' +
+      '<p class="sub">Всего ' + totalQuestions() + ' вопросов. Выберите раздел.</p>' +
       '<div class="grid">' +
-        SUBJECTS.map(function (s) { return renderSubjectCard(s); }).join("") +
+        CATS.map(function (c) { return renderCategoryCard(c); }).join("") +
       '</div>';
 
     document.getElementById("themeBtn").addEventListener("click", showThemePicker);
@@ -186,6 +213,8 @@
     // Делегирование кликов по карточкам (ставим один раз)
     if (!cardListenerAttached) {
       app.addEventListener("click", function (e) {
+        const cbtn = e.target.closest(".catc");
+        if (cbtn && cbtn.dataset.cat) { renderCategory(cbtn.dataset.cat); return; }
         const btn = e.target.closest(".subj");
         if (!btn) return;
         const id = btn.dataset.id;
@@ -196,6 +225,42 @@
     }
   }
 
+  function renderCategoryCard(c) {
+    const subs = catSubjects(c);
+    const qs = subs.reduce(function (n, s) { return n + s.q.length; }, 0);
+    const done = subs.filter(function (s) {
+      const cl = cloudCache[s.id];
+      return (cl && cl.best) || localBest[s.id];
+    }).length;
+    return '<button class="card catc" data-cat="' + c.id + '" type="button">' +
+      '<span class="e">' + c.e + '</span>' +
+      '<b>' + escapeHtml(c.n) + '</b>' +
+      '<small>' + subs.length + ' ' + (subs.length === 1 ? "предмет" : (subs.length < 5 ? "предмета" : "предметов")) +
+        ' · ' + qs + ' вопр. · пройдено ' + done + '/' + subs.length + '</small>' +
+    '</button>';
+  }
+
+  function renderCategory(catId) {
+    const cat = findCategory(catId);
+    if (!cat) { renderHome(); return; }
+    currentCategory = cat.id;
+    const subs = catSubjects(cat);
+    app.innerHTML =
+      '<div class="top">' +
+        '<button class="back" id="backHomeBtn" type="button">← Разделы</button>' +
+        '<span>' + cat.e + ' ' + escapeHtml(cat.n) + '</span>' +
+      '</div>' +
+      '<p class="sub">Выберите предмет.</p>' +
+      '<div class="grid">' +
+        subs.map(function (s) { return renderSubjectCard(s); }).join("") +
+      '</div>';
+    document.getElementById("backHomeBtn").addEventListener("click", function () {
+      currentCategory = null;
+      renderHome();
+    });
+    window.scrollTo({ top: 0 });
+  }
+
   function renderSubjectCard(s) {
     const cloud = cloudCache[s.id];
     const grade = cloud && cloud.best ? cloud.best : localBest[s.id];
@@ -203,7 +268,8 @@
     // Реальное количество вопросов
     const qCount = s.q.length;
     const expected = typeof s.expected === "number" ? s.expected : qCount;
-    const warn = qCount !== expected ? " · ⚠️ ожидается " + expected : "";
+    const warn = (qCount !== expected ? " · ⚠️ ожидается " + expected : "") +
+      (s.disclaimer ? " · ⚠️ с предупреждением" : "");
 
     return '<button class="card subj" data-id="' + s.id + '" type="button">' +
       (grade ? '<span class="badge">' + grade + '</span>' : '') +
@@ -349,9 +415,41 @@
   }
 
   /* ============ Тест ============ */
-  function startTest(id) {
+  function showDisclaimer(subject, onAccept) {
+    const bg = document.createElement("div");
+    bg.className = "modal-bg";
+    bg.innerHTML =
+      '<div class="modal">' +
+        '<h2>' + subject.e + ' ' + escapeHtml(subject.n) + '</h2>' +
+        '<p class="sub disc">' + escapeHtml(subject.disclaimer) + '</p>' +
+        '<div class="row">' +
+          '<button class="btn g" id="discNo" type="button">Назад</button>' +
+          '<button class="btn" id="discYes" type="button">Понятно, начать</button>' +
+        '</div>' +
+      '</div>';
+    document.body.appendChild(bg);
+    bg.addEventListener("click", function (e) {
+      if (e.target === bg || e.target.id === "discNo") bg.remove();
+    });
+    bg.querySelector("#discYes").addEventListener("click", function () {
+      bg.remove();
+      onAccept();
+    });
+  }
+
+  function startTest(id, skipDisclaimer) {
     const subject = SUBJECTS.find(function (s) { return s.id === id; });
     if (!subject) { console.error("Предмет не найден: " + id); return; }
+
+    if (subject.disclaimer && !skipDisclaimer) {
+      showDisclaimer(subject, function () { startTest(id, true); });
+      return;
+    }
+
+    if (!currentCategory) {
+      const c = findCategoryBySubject(id);
+      currentCategory = c ? c.id : null;
+    }
 
     // Берём ВСЕ вопросы, каждый — ровно один раз
     const total = subject.q.length;
@@ -405,7 +503,7 @@
 
     document.getElementById("backBtn").addEventListener("click", function () {
       if (confirm("Выйти без сохранения результата?")) {
-        state = null; renderHome();
+        goBackToList();
       }
     });
 
@@ -511,10 +609,10 @@
         'Поделиться результатом</button>';
 
     document.getElementById("againBtn").addEventListener("click", function () {
-      startTest(subject.id);
+      startTest(subject.id, true);
     });
     document.getElementById("homeBtn").addEventListener("click", function () {
-      state = null; renderHome();
+      goBackToList();
     });
     document.getElementById("shareBtn").addEventListener("click", function () {
       shareResult(subject, grade, correct, n, percent);
