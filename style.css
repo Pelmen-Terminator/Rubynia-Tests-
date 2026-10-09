@@ -440,3 +440,8 @@ h2 { font-size: 20px; margin: 0 0 12px; }
   max-height: 55vh;
   overflow-y: auto;
 }
+
+
+/* Подкатегории внутри предметных разделов */
+.subgroup { margin: 22px 0 26px; }
+.subgroup-title { font-size: 16px; margin: 0 0 12px; padding-bottom: 8px; border-bottom: 1px solid var(--bd); }

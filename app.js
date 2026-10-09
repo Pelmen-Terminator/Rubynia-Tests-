@@ -143,9 +143,36 @@
     : [{ id: "all", n: "Все предметы", e: "🎓", subjects: SUBJECTS.map(function (s) { return s.id; }) }];
 
   function catSubjects(cat) {
-    return cat.subjects.map(function (id) {
+    const ids = Array.isArray(cat.subjects) ? cat.subjects.slice() : [];
+    (cat.groups || []).forEach(function (group) {
+      if (Array.isArray(group.subjects)) ids.push.apply(ids, group.subjects);
+    });
+    return ids.map(function (id) {
       return SUBJECTS.find(function (s) { return s.id === id; });
     }).filter(Boolean);
+  }
+
+  function renderCategoryContents(cat) {
+    if (!Array.isArray(cat.groups) || !cat.groups.length) {
+      return '<div class="grid">' + catSubjects(cat).map(function (s) { return renderSubjectCard(s); }).join("") + '</div>';
+    }
+    const chunks = [];
+    if (Array.isArray(cat.subjects) && cat.subjects.length) {
+      chunks.push('<div class="grid">' + cat.subjects.map(function (id) {
+        const subject = SUBJECTS.find(function (s) { return s.id === id; });
+        return subject ? renderSubjectCard(subject) : '';
+      }).join("") + '</div>');
+    }
+    cat.groups.forEach(function (group) {
+      const subjects = (group.subjects || []).map(function (id) {
+        return SUBJECTS.find(function (s) { return s.id === id; });
+      }).filter(Boolean);
+      chunks.push('<section class="subgroup"><h2 class="subgroup-title">' +
+        (group.e ? group.e + ' ' : '') + escapeHtml(group.n) + '</h2><div class="grid">' +
+        subjects.map(function (subject) { return renderSubjectCard(subject); }).join('') +
+        '</div></section>');
+    });
+    return chunks.join('');
   }
 
   function findCategory(id) {
@@ -153,7 +180,12 @@
   }
 
   function findCategoryBySubject(sid) {
-    return CATS.find(function (c) { return c.subjects.indexOf(sid) !== -1; }) || null;
+    return CATS.find(function (c) {
+      if (Array.isArray(c.subjects) && c.subjects.indexOf(sid) !== -1) return true;
+      return (c.groups || []).some(function (group) {
+        return Array.isArray(group.subjects) && group.subjects.indexOf(sid) !== -1;
+      });
+    }) || null;
   }
 
   // Возврат на экран категории (или на главную)
@@ -251,9 +283,7 @@
         '<span>' + cat.e + ' ' + escapeHtml(cat.n) + '</span>' +
       '</div>' +
       '<p class="sub">Выберите предмет.</p>' +
-      '<div class="grid">' +
-        subs.map(function (s) { return renderSubjectCard(s); }).join("") +
-      '</div>';
+      renderCategoryContents(cat);
     document.getElementById("backHomeBtn").addEventListener("click", function () {
       currentCategory = null;
       renderHome();
