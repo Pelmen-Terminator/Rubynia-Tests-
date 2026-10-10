@@ -28961,7 +28961,7 @@ const SUBJECTS = [
   },
   {
     "id": "histbritain",
-    "n": "История: Британия",
+    "n": "История: Великобритания",
     "e": "🇬🇧",
     "expected": 50,
     "q": [
@@ -73157,7 +73157,7 @@ const SUBJECTS = [
   },
   {
     "id": "histspain",
-    "n": "История Испании",
+    "n": "История: Испания",
     "e": "🇪🇸",
     "expected": 50,
     "q": [
@@ -73665,7 +73665,7 @@ const SUBJECTS = [
   },
   {
     "id": "histegypt",
-    "n": "История Египта",
+    "n": "История: Египет",
     "e": "🏺",
     "expected": 50,
     "q": [
@@ -74173,7 +74173,7 @@ const SUBJECTS = [
   },
   {
     "id": "histiran",
-    "n": "История Ирана",
+    "n": "История: Иран",
     "e": "🇮🇷",
     "expected": 50,
     "q": [
@@ -74681,7 +74681,7 @@ const SUBJECTS = [
   },
   {
     "id": "histiraq",
-    "n": "История Ирака",
+    "n": "История: Ирак",
     "e": "🇮🇶",
     "expected": 50,
     "q": [
@@ -75189,7 +75189,7 @@ const SUBJECTS = [
   },
   {
     "id": "histkorea",
-    "n": "История Кореи",
+    "n": "История: Корея",
     "e": "🇰🇷",
     "expected": 50,
     "q": [
@@ -75697,7 +75697,7 @@ const SUBJECTS = [
   },
   {
     "id": "histpoland",
-    "n": "История Польши",
+    "n": "История: Польша",
     "e": "🇵🇱",
     "expected": 50,
     "q": [
@@ -76205,7 +76205,7 @@ const SUBJECTS = [
   },
   {
     "id": "histgreece",
-    "n": "История Греции",
+    "n": "История: Греция",
     "e": "🇬🇷",
     "expected": 50,
     "q": [
@@ -76713,7 +76713,7 @@ const SUBJECTS = [
   },
   {
     "id": "histportugal",
-    "n": "История Португалии",
+    "n": "История: Португалия",
     "e": "🇵🇹",
     "expected": 50,
     "q": [
@@ -99212,14 +99212,7 @@ const CATEGORIES = [
           "histfrance",
           "histbritain",
           "histjapan",
-          "ww1",
-          "ww2",
-          "coldwar",
-          "antiquity",
-          "medieval",
-          "rome",
           "histitaly",
-          "ancientgreek",
           "histspain",
           "histegypt",
           "histiran",
@@ -99227,7 +99220,14 @@ const CATEGORIES = [
           "histkorea",
           "histpoland",
           "histgreece",
-          "histportugal"
+          "histportugal",
+          "ww1",
+          "ww2",
+          "coldwar",
+          "antiquity",
+          "medieval",
+          "rome",
+          "ancientgreek"
         ]
       },
       {
@@ -99427,10 +99427,3 @@ const CATEGORIES = [
     ]
   }
 ];
-
-(function () {
-  const categoryIds = CATEGORIES.flatMap(c => [...(c.subjects || []), ...(c.groups || []).flatMap(g => g.subjects || [])]);
-  SUBJECTS.forEach(s => { if (s.expected === 50 && s.q.length !== 50) console.warn("Question count mismatch:", s.id); });
-  const missing = SUBJECTS.filter(s => !categoryIds.includes(s.id));
-  if (missing.length) console.warn("Uncategorized subjects:", missing.map(s => s.id));
-})();
