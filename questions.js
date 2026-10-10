@@ -99322,8 +99322,8 @@ const CATEGORIES = [
         ]
       },
       {
-        "n": "Регионоведение",
-        "e": "🌏",
+        "n": "Мифология народов мира",
+        "e": "📜",
         "subjects": [
           "mythslavic",
           "mythroman",
@@ -99331,13 +99331,7 @@ const CATEGORIES = [
           "mythnorse",
           "mythjapanese",
           "mythchinese",
-          "mythceltic"
-        ]
-      },
-      {
-        "n": "Мифология народов мира",
-        "e": "📜",
-        "subjects": [
+          "mythceltic",
           "mythegypt",
           "mythmeso",
           "mythhindu"
